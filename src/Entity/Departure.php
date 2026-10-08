@@ -8,27 +8,59 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\DBAL\Types\Types;
+use ApiPlatform\Metadata\ApiFilter;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use Symfony\Component\Serializer\Attribute\Groups;
+use App\Enum\BookingStatus;
 
 
+#[ApiResource(
+    operations: [new GetCollection(), new Get()],
+    normalizationContext: ['groups' => ['departure:read']],
+    order: ['departureAt' => 'ASC'],
+)]
+#[ApiFilter(SearchFilter::class, properties: [
+    'line.origin' => 'iexact',
+    'line.destination' => 'iexact',
+])]
+#[ApiFilter(DateFilter::class, properties: ['departureAt'])]
+#[ApiFilter(SearchFilter::class, properties: [
+    'line.origin' => 'iexact',
+    'line.destination' => 'iexact',
+    'status' => 'exact',
+])]
 #[ORM\Entity(repositoryClass: DepartureRepository::class)]
 class Departure
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['departure:read'])]
     private ?int $id = null;
 
     #[ORM\Column]
+    #[Groups(['departure:read'])]
     private ?\DateTimeImmutable $departureAt = null;
 
+    #[ORM\Column]
+    #[Groups(['departure:read'])]
+    private ?int $seats = null;
+
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
+    #[Groups(['departure:read'])]
     private ?string $price = null;
 
-    #[ORM\Column(type: Types::STRING, length: 20, enumType: DepartureStatus::class)]
+    #[ORM\Column(length: 20, enumType: DepartureStatus::class)]
+    #[Groups(['departure:read'])]
     private DepartureStatus $status = DepartureStatus::Scheduled;
 
     #[ORM\ManyToOne(inversedBy: 'departures')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['departure:read'])]
     private ?Line $line = null;
 
     /**
@@ -36,9 +68,6 @@ class Departure
      */
     #[ORM\OneToMany(targetEntity: Booking::class, mappedBy: 'departure')]
     private Collection $bookings;
-
-    #[ORM\Column]
-    private ?int $seats = null;
 
     public function __construct()
     {
@@ -62,12 +91,12 @@ class Departure
         return $this;
     }
 
-    public function getPrice(): ?int
+    public function getPrice(): ?string
     {
         return $this->price;
     }
 
-    public function setPrice(?int $price): static
+    public function setPrice(?string $price): static
     {
         $this->price = $price;
 
@@ -138,5 +167,24 @@ class Departure
         $this->seats = $seats;
 
         return $this;
+    }
+
+    #[Groups(['departure:read'])]
+    public function getAvailableSeats(): int
+    {
+        $taken = 0;
+        foreach ($this->bookings as $booking) {
+            if ($booking->getStatus() !== BookingStatus::Cancelled) {
+                $taken += $booking->getNumberOfPersons();
+            }
+        }
+
+        return max(0, ($this->seats ?? 0) - $taken);
+    }
+
+    #[Groups(['departure:read'])]
+    public function getEffectivePrice(): ?string
+    {
+        return $this->price ?? $this->line?->getBasePrice();
     }
 }
