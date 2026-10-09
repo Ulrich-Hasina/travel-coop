@@ -33,10 +33,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[ORM\Column(length: 180, nullable: true)]
+    #[ORM\Column(length: 180)]
     private ?string $email = null;
 
-    #[ORM\Column(length: 20)]
+    #[ORM\Column(length: 30)]
     private ?string $phone = null;
 
     #[ORM\Column(length: 255)]
@@ -119,7 +119,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->email;
     }
 
-    public function setEmail(?string $email): static
+    public function setEmail(string $email): static
     {
         $this->email = $email;
 

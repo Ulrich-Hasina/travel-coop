@@ -5,6 +5,8 @@ namespace App\Repository;
 use App\Entity\Booking;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use App\Entity\Departure;
+use App\Enum\BookingStatus;
 
 /**
  * @extends ServiceEntityRepository<Booking>
@@ -14,6 +16,18 @@ class BookingRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Booking::class);
+    }
+
+    public function countSeatsTaken(Departure $departure): int
+    {
+        return (int) $this->createQueryBuilder('b')
+            ->select('COALESCE(SUM(b.numberOfPersons), 0)')
+            ->andWhere('b.departure = :departure')
+            ->andWhere('b.status != :cancelled')
+            ->setParameter('departure', $departure)
+            ->setParameter('cancelled', BookingStatus::Cancelled->value)
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 
 //    /**
