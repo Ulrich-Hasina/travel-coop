@@ -12,10 +12,12 @@ use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class BookingService
 {
-    private const MAX_PERSONS_PER_BOOKING = 27; // à adapter
+    private const MAX_PERSONS_PER_BOOKING = 10;
+    private const CANCELLATION_DEADLINE_HOURS = 2;
 
     public function __construct(
         private EntityManagerInterface $em,
@@ -71,5 +73,28 @@ class BookingService
 
             return $booking; // wrapInTransaction fait le flush puis le commit
         });
+    }
+
+    public function cancel(User $user, Booking $booking): Booking
+    {
+        if ($booking->getCustomer() !== $user) {
+            throw new AccessDeniedHttpException();
+        }
+        if (BookingStatus::Cancelled === $booking->getStatus()) {
+            throw new ConflictHttpException('Cette réservation est déjà annulée.');
+        }
+
+        $limit = $booking->getDeparture()->getDepartureAt()
+            ->modify(sprintf('-%d hours', self::CANCELLATION_DEADLINE_HOURS));
+        if (new \DateTimeImmutable() > $limit) {
+            throw new UnprocessableEntityHttpException(
+                sprintf('Annulation impossible moins de %d heures avant le départ.', self::CANCELLATION_DEADLINE_HOURS)
+            );
+        }
+
+        $booking->setStatus(BookingStatus::Cancelled);
+        $this->em->flush();
+
+        return $booking;
     }
 }
