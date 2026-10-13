@@ -2,14 +2,14 @@
 
 namespace App\Tests\Api;
 
+use ApiPlatform\Test\ApiTestCase;
+use ApiPlatform\Test\Client;
 use App\Entity\Departure;
 use App\Entity\Line;
 use App\Entity\User;
 use App\Enum\DepartureStatus;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use ApiPlatform\Test\Client;
-use ApiPlatform\Test\ApiTestCase;
 
 class BookingApiTest extends ApiTestCase
 {
@@ -294,5 +294,4 @@ class BookingApiTest extends ApiTestCase
 
         $this->assertResponseStatusCodeSame(401);
     }
-
 }

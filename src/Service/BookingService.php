@@ -10,9 +10,9 @@ use App\Enum\DepartureStatus;
 use App\Repository\BookingRepository;
 use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\HttpKernel\Exception\UnprocessableEntityHttpException;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class BookingService
 {
@@ -28,9 +28,7 @@ class BookingService
     public function book(User $customer, Departure $departure, int $persons): Booking
     {
         if ($persons < 1 || $persons > self::MAX_PERSONS_PER_BOOKING) {
-            throw new UnprocessableEntityHttpException(
-                sprintf('Le nombre de personnes doit être entre 1 et %d.', self::MAX_PERSONS_PER_BOOKING)
-            );
+            throw new UnprocessableEntityHttpException(sprintf('Le nombre de personnes doit être entre 1 et %d.', self::MAX_PERSONS_PER_BOOKING));
         }
 
         return $this->em->wrapInTransaction(function () use ($customer, $departure, $persons): Booking {
@@ -49,9 +47,7 @@ class BookingService
             $taken = $this->bookingRepository->countSeatsTaken($departure);
             $remaining = ($departure->getSeats() ?? 0) - $taken;
             if ($persons > $remaining) {
-                throw new ConflictHttpException(
-                    sprintf('Il ne reste que %d place(s) sur ce départ.', max(0, $remaining))
-                );
+                throw new ConflictHttpException(sprintf('Il ne reste que %d place(s) sur ce départ.', max(0, $remaining)));
             }
 
             // 3. Prix calculé côté serveur et figé dans la réservation
@@ -87,9 +83,7 @@ class BookingService
         $limit = $booking->getDeparture()->getDepartureAt()
             ->modify(sprintf('-%d hours', self::CANCELLATION_DEADLINE_HOURS));
         if (new \DateTimeImmutable() > $limit) {
-            throw new UnprocessableEntityHttpException(
-                sprintf('Annulation impossible moins de %d heures avant le départ.', self::CANCELLATION_DEADLINE_HOURS)
-            );
+            throw new UnprocessableEntityHttpException(sprintf('Annulation impossible moins de %d heures avant le départ.', self::CANCELLATION_DEADLINE_HOURS));
         }
 
         $booking->setStatus(BookingStatus::Cancelled);
