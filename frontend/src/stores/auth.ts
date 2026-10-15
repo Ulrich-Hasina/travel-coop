@@ -24,9 +24,7 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem(TOKEN_KEY))
 
   const payload = computed(() => (token.value ? decode(token.value) : null))
-  const isAuthenticated = computed(
-    () => !!payload.value && payload.value.exp * 1000 > Date.now(),
-  )
+  const isAuthenticated = computed(() => !!payload.value && payload.value.exp * 1000 > Date.now())
   const email = computed(() => payload.value?.username ?? null)
   const isAdmin = computed(() => payload.value?.roles.includes('ROLE_ADMIN') ?? false)
 

@@ -10,6 +10,7 @@ use App\Entity\User;
 use App\Enum\DepartureStatus;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Contracts\HttpClient\ResponseInterface;
 
 class BookingApiTest extends ApiTestCase
 {
@@ -132,7 +133,7 @@ class BookingApiTest extends ApiTestCase
         ])->toArray()['token'];
     }
 
-    private function book(Client $client, string $token, Departure $departure, int $persons)
+    private function book(Client $client, string $token, Departure $departure, int $persons): ResponseInterface
     {
         return $client->request('POST', '/api/bookings', [
             'auth_bearer' => $token,
@@ -141,7 +142,7 @@ class BookingApiTest extends ApiTestCase
         ]);
     }
 
-    private function cancel(Client $client, string $token, string $bookingIri)
+    private function cancel(Client $client, string $token, string $bookingIri): ResponseInterface
     {
         return $client->request('POST', $bookingIri.'/cancel', [
             'auth_bearer' => $token,

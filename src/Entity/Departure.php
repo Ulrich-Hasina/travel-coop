@@ -43,11 +43,11 @@ class Departure
 
     #[ORM\Column]
     #[Groups(['departure:read'])]
-    private ?\DateTimeImmutable $departureAt = null;
+    private \DateTimeImmutable $departureAt;
 
     #[ORM\Column]
     #[Groups(['departure:read'])]
-    private ?int $seats = null;
+    private int $seats;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     #[Groups(['departure:read'])]
@@ -60,7 +60,7 @@ class Departure
     #[ORM\ManyToOne(inversedBy: 'departures')]
     #[ORM\JoinColumn(nullable: false)]
     #[Groups(['departure:read'])]
-    private ?Line $line = null;
+    private Line $line;
 
     /**
      * @var Collection<int, Booking>
@@ -184,6 +184,6 @@ class Departure
     #[Groups(['departure:read'])]
     public function getEffectivePrice(): ?string
     {
-        return $this->price ?? $this->line?->getBasePrice();
+        return $this->price ?? $this->line->getBasePrice();
     }
 }

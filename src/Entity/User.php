@@ -31,19 +31,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      * @var string The hashed password
      */
     #[ORM\Column]
-    private ?string $password = null;
+    private string $password;
 
     #[ORM\Column(length: 180)]
-    private ?string $email = null;
+    private string $email;
 
     #[ORM\Column(length: 30)]
-    private ?string $phone = null;
+    private string $phone;
 
     #[ORM\Column(length: 255)]
-    private ?string $firstName = null;
+    private string $firstName;
 
     #[ORM\Column(length: 100)]
-    private ?string $lastName = null;
+    private string $lastName;
 
     /**
      * @var Collection<int, Booking>

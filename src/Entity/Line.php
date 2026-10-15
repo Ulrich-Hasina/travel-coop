@@ -20,15 +20,15 @@ class Line
 
     #[ORM\Column(length: 255)]
     #[Groups(['departure:read'])]
-    private ?string $origin = null;
+    private string $origin;
 
     #[ORM\Column(length: 255)]
     #[Groups(['departure:read'])]
-    private ?string $destination = null;
+    private string $destination;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
     #[Groups(['departure:read'])]
-    private ?string $basePrice = null;
+    private string $basePrice;
 
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     #[Groups(['departure:read'])]
