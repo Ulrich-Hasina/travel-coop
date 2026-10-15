@@ -2,21 +2,20 @@
 
 namespace App\Entity;
 
-use App\Enum\DepartureStatus;
-use App\Repository\DepartureRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
-use Doctrine\ORM\Mapping as ORM;
-use Doctrine\DBAL\Types\Types;
+use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
 use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
-use ApiPlatform\Doctrine\Orm\Filter\DateFilter;
-use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
-use Symfony\Component\Serializer\Attribute\Groups;
 use App\Enum\BookingStatus;
-
+use App\Enum\DepartureStatus;
+use App\Repository\DepartureRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ApiResource(
     operations: [new GetCollection(), new Get()],
@@ -44,11 +43,11 @@ class Departure
 
     #[ORM\Column]
     #[Groups(['departure:read'])]
-    private ?\DateTimeImmutable $departureAt = null;
+    private \DateTimeImmutable $departureAt;
 
     #[ORM\Column]
     #[Groups(['departure:read'])]
-    private ?int $seats = null;
+    private int $seats;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     #[Groups(['departure:read'])]
@@ -61,7 +60,7 @@ class Departure
     #[ORM\ManyToOne(inversedBy: 'departures')]
     #[ORM\JoinColumn(nullable: false)]
     #[Groups(['departure:read'])]
-    private ?Line $line = null;
+    private Line $line;
 
     /**
      * @var Collection<int, Booking>
@@ -174,7 +173,7 @@ class Departure
     {
         $taken = 0;
         foreach ($this->bookings as $booking) {
-            if ($booking->getStatus() !== BookingStatus::Cancelled) {
+            if (BookingStatus::Cancelled !== $booking->getStatus()) {
                 $taken += $booking->getNumberOfPersons();
             }
         }
@@ -185,6 +184,6 @@ class Departure
     #[Groups(['departure:read'])]
     public function getEffectivePrice(): ?string
     {
-        return $this->price ?? $this->line?->getBasePrice();
+        return $this->price ?? $this->line->getBasePrice();
     }
 }

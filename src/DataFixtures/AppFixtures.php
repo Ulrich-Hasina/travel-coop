@@ -60,7 +60,7 @@ class AppFixtures extends Fixture
         // --- Départs : 2 par jour et par ligne, sur 7 jours ---
         $departures = [];
         foreach ($lines as $line) {
-            for ($day = 1; $day <= 7; $day++) {
+            for ($day = 1; $day <= 7; ++$day) {
                 foreach (['06:00', '14:00'] as $hour) {
                     $departure = (new Departure())
                         ->setLine($line)

@@ -2,17 +2,15 @@
 
 namespace App\Entity;
 
-use App\Enum\BookingStatus;
-use App\Repository\BookingRepository;
-use Doctrine\DBAL\Types\Types;
-use Doctrine\ORM\Mapping as ORM;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
+use App\Enum\BookingStatus;
+use App\Repository\BookingRepository;
 use App\State\BookingProcessor;
+use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
-use Symfony\Component\Validator\Constraints as Assert;
 
 #[ApiResource(
     operations: [
@@ -33,33 +31,33 @@ class Booking
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups(['booking:read'])]  
+    #[Groups(['booking:read'])]
     private ?int $id = null;
 
     #[ORM\Column]
     #[Groups(['booking:read', 'booking:write'])]
-    private ?int $numberOfPersons = null;
+    private int $numberOfPersons;
 
-    #[Groups(['booking:read'])]   
-    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
-    private ?string $totalPrice = null;
+    #[Groups(['booking:read'])]
+    #[ORM\Column(type: 'decimal', precision: 10, scale: 2)]
+    private string $totalPrice;
 
-    #[Groups(['booking:read'])]   
+    #[Groups(['booking:read'])]
     #[ORM\Column]
-    private ?\DateTimeImmutable $createdAt = null;
+    private \DateTimeImmutable $createdAt;
 
-    #[Groups(['booking:read'])]   
+    #[Groups(['booking:read'])]
     #[ORM\Column(enumType: BookingStatus::class)]
-    private ?BookingStatus $status = null;
+    private BookingStatus $status;
 
     #[ORM\ManyToOne(inversedBy: 'bookings')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?User $customer = null;
+    private User $customer;
 
     #[ORM\ManyToOne(inversedBy: 'bookings')]
     #[ORM\JoinColumn(nullable: false)]
     #[Groups(['booking:read', 'booking:write'])]
-    private ?Departure $departure = null;
+    private Departure $departure;
 
     public function getId(): ?int
     {
