@@ -1,0 +1,128 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  quality:
+    name: Qualité du code (PHP)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: intl, mbstring, xml, curl, zip, pdo_pgsql
+          tools: composer:v2
+
+      - name: Installer les dépendances
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Vulnérabilités connues des dépendances
+        run: composer audit
+
+      - name: Style du code (PHP-CS-Fixer)
+        run: composer cs:check
+
+      - name: Valider les fichiers YAML
+        run: php bin/console lint:yaml config --parse-tags
+
+      - name: Valider le conteneur de services
+        run: php bin/console lint:container
+
+      - name: Préparer le conteneur pour PHPStan
+        run: php bin/console cache:warmup
+
+      - name: Analyse statique (PHPStan)
+        run: composer stan
+
+  tests:
+    name: Tests (PHPUnit)
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: coop
+          POSTGRES_PASSWORD: coop
+          POSTGRES_DB: cooperative
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U coop"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgresql://coop:coop@127.0.0.1:5432/cooperative?serverVersion=16&charset=utf8
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: intl, mbstring, xml, curl, zip, pdo_pgsql
+          tools: composer:v2
+
+      - name: Installer les dépendances
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Générer les clés JWT
+        run: php bin/console lexik:jwt:generate-keypair --skip-if-exists
+
+      - name: Créer la base de test et appliquer les migrations
+        run: |
+          php bin/console doctrine:database:create --if-not-exists
+          php bin/console doctrine:migrations:migrate -n
+
+      - name: Vérifier que le schéma correspond aux entités
+        run: php bin/console doctrine:schema:validate
+
+      - name: Lancer les tests
+        run: php bin/phpunit --testdox
+
+  frontend:
+    name: Front (Vue)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@v4
+
+      - name: Installer Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Linter (ESLint)
+        run: npx eslint .
+
+      - name: Format (Prettier)
+        run: npx prettier --check src/
+
+      - name: Tests unitaires
+        run: npm run test:unit -- --run --passWithNoTests
+
+      - name: Vérification des types et build
+        run: npm run build
