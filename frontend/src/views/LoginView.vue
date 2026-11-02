@@ -31,16 +31,29 @@ async function submit() {
 </script>
 
 <template>
-  <main>
-    <h1>Connexion</h1>
-    <form @submit.prevent="submit">
-      <label>Email <input v-model="email" type="email" required autocomplete="username" /></label>
-      <label>
-        Mot de passe
-        <input v-model="password" type="password" required autocomplete="current-password" />
-      </label>
-      <p v-if="error" role="alert">{{ error }}</p>
-      <button type="submit" :disabled="loading">Se connecter</button>
-    </form>
-  </main>
+  <v-row justify="center">
+    <v-col cols="12" sm="8" md="5">
+      <v-card class="pa-4">
+        <v-card-title>Connexion</v-card-title>
+        <v-form @submit.prevent="submit">
+          <v-text-field
+            v-model="email"
+            type="email"
+            label="Email"
+            autocomplete="username"
+            required
+          />
+          <v-text-field
+            v-model="password"
+            type="password"
+            label="Mot de passe"
+            autocomplete="current-password"
+            required
+          />
+          <v-alert v-if="error" type="error" density="compact" class="mb-4">{{ error }}</v-alert>
+          <v-btn type="submit" color="primary" block :loading="loading">Se connecter</v-btn>
+        </v-form>
+      </v-card>
+    </v-col>
+  </v-row>
 </template>

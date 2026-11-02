@@ -2,6 +2,9 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
 use App\Repository\LineRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -9,6 +12,11 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Attribute\Groups;
 
+#[ApiResource(
+    operations: [new GetCollection(paginationEnabled: false), new Get()],
+    normalizationContext: ['groups' => ['departure:read']],
+    order: ['origin' => 'ASC', 'destination' => 'ASC'],
+)]
 #[ORM\Entity(repositoryClass: LineRepository::class)]
 class Line
 {
